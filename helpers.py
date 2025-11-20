@@ -205,35 +205,25 @@ def compute_GI(cols,I):
 
 
 '''
-Input: Two semigroups
-Output: Boolean whether or not they are isomorphic
-'''
-
-def check_isomorfismo(semig1,semig2):
-    C1 = Cone(semig1)
-    C2 = Cone(semig2)
-    A = find_isomorphism(Fan([C1]),Fan([C2])).matrix().transpose()
-    S1 = set([immutabilize(x) for x in (A*matrix(ZZ,semig1).transpose()).columns()])
-    S2 = set([immutabilize(x) for x in matrix(ZZ,semig2).transpose().columns()])
-    return S1 == S2
-
-'''
-Auxilliary to make something immutable
-'''
-
-def immutabilize(m):
-    M = copy(m)
-    M.set_immutable()
-    return M
-
-
-'''
-Input: A semigroup
+Input: A semigroup as a matrix
 Output: A normal form of it
 '''
-def standard_semig(semig):    
-    C1 = Cone(palp_cone(matrix(ZZ,semig).transpose()).columns())
-    C2 = Cone(semig)
-    A = find_isomorphism(Fan([C2]),Fan([C1])).matrix().transpose()
-    M = matrix(ZZ, sorted([list(x) for x in (A*matrix(ZZ,semig).transpose()).columns()], reverse=True), immutable=True)
-    return  M
+def palp_semig(semig):    
+    dim = semig.nrows()
+    zero = [0 for _ in range(dim)]
+    aux = semig.transpose()
+
+    #Auxilliary: we add the zero to ensure that it is full dimensional
+    #note that zero will always be a vertex if the semigroup is pointed
+
+
+    P = Polyhedron( vertices = aux.insert_row(aux.nrows(), vector(zero) ) ) 
+    _, pi = P.normal_form(permutation=True)
+
+    M = matrix(ZZ, pi(P.vertices())).transpose()
+    _, U = M.hermite_form(transformation=True) 
+
+    T = U*semig
+    R = matrix( ZZ, sorted(T.columns()), immutable=True )
+    return matrix( ZZ, R.columns(), immutable=True)
+
