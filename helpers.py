@@ -68,28 +68,30 @@ Output: PALP Normal form
 
 
 def palp_cone(cone):
-    # Dimension
-    d = len(cone.rows())
 
-    # Artificially create a zero vector
-    zero = [0 for i in range(d)]
+    # Dimension
+    dim = len(cone.rows())
+    zero = vector(ZZ,dim)
+    aux = cone.transpose()
 
     # This step adds the zero because normal forms needs
     # a full dimensional polytope
-    P = Polyhedron(vertices=cone.columns() + [zero])
+    P = Polyhedron( vertices = aux.insert_row(aux.nrows(), zero) ) 
     temp = P.normal_form()
 
-    # In a hacky way we remove the zero vector and return
-    N = matrix(ZZ, temp, immutable=True).transpose()
-    cols = N.columns()
-    lis = []
-    for i in range(len(cols)):
-        if cols[i] == vector(zero):
-            lis.append(i)
-            N = N.delete_columns(lis)
-            break
+    # We need to remove zero
+    normal = matrix(ZZ, [col for col in temp if col!=zero])
+    normal_transpose = matrix(ZZ, normal.columns(), immutable=True)
+    return normal_transpose
 
-    return N.hermite_form()
+
+'''
+----------------------------------------------------------
+|
+| Below are the helper functions for the semigroup case
+|
+----------------------------------------------------------
+'''
 
 
 '''
@@ -136,7 +138,7 @@ def reduction(semig, check_pointed=False, check_generate=False):
     return matrix(ZZ, minimals, immutable=True).transpose()
 
 '''
-Auxilliary
+Auxilliary to the above function
 '''
 def sum_pair(S,T):
     ret = set()
@@ -186,31 +188,27 @@ Output: ???
 '''
 
 def compute_GI(cols,I):
-
-    GI = cols.copy()
-    
-    for i in I:
-        for j in cols:
-            if j in I:
+    G_I = list(cols)
+    for h in I:
+        for g in cols:
+            if g in I:
                 continue
+            J = list(I)
+            J.remove(h)
+            J.append(g)
+            if matrix(ZZ,J).determinant() != 0:
+                v = vector(g) - vector(h)
+                G_I.append(v)
 
-            M = [k for k in I if k!=i]+[j]
-
-            if matrix(ZZ,M).determinant()!=0:
-                r = vector(j)-vector(i)
-                GI.add(j)
-
-                
-    return list(GI)
-
-
+    return G_I
+    
 '''
 Input: A semigroup as a matrix
 Output: A normal form of it
 '''
 def palp_semig(semig):    
     dim = semig.nrows()
-    zero = [0 for _ in range(dim)]
+    zero = vector(ZZ,dim)
     aux = semig.transpose()
 
     #Auxilliary: we add the zero to ensure that it is full dimensional
