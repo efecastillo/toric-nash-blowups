@@ -289,8 +289,3 @@ This program is free software: you can redistribute it and/or modify it under th
 
 This work was initiated at the AGREGA workshop at Universidad de Talca in January 2024. We thank the institution for its support and hospitality.
 
-## Contact
-
-For questions or comments:
-- Federico Castillo: efecastillo.math@gmail.com
-- Repository: https://github.com/efecastillo/toric-nash-blowups
