@@ -30,11 +30,11 @@ This implementation works primarily on the M-side, which provides a unified fram
 
 ### Nash Blowup Conjectures
 
-**Nash Blowup Conjecture:** Iterating the Nash blowup on a singular variety eventually produces a non-singular variety.
+**Nash Blowup Conjecture:** Iterating the Nash blowup on a singular variety (over a field of characteristic zero) eventually produces a non-singular variety.
 
 **Normalized Nash Blowup Conjecture:** Iterating the normalized Nash blowup on a singular variety eventually produces a non-singular variety.
 
-Both conjectures are **false** in dimensions 3 and 4 respectively (over characteristic zero fields).
+Both conjectures are **false** in dimensions 3 and 4 respectively.
 
 ## Installation
 
@@ -52,16 +52,10 @@ git clone https://github.com/efecastillo/toric-nash-blowups.git
 cd toric-nash-blowups
 ```
 
-2. Ensure SageMath is installed. If not, install via:
-```bash
-# On Ubuntu/Debian
-sudo apt-get install sagemath
+2. Ensure SageMath is installed. If not, install following the instructions in https://github.com/sagemath/sage.
 
-# Or use conda
-conda install -c conda-forge sage
-```
 
-3. The code automatically uses Normaliz through SageMath's interface for computing Hilbert bases.
+4. The code automatically uses Normaliz through SageMath's interface for computing Hilbert bases.
 
 ## Usage
 
@@ -94,20 +88,12 @@ The main computational tool is the resolution tree, which explores all descendan
 # Compute the complete resolution tree
 resolution_tree = nash.cone_normalized_nash_tree(cone, Char=0)
 
-# Check if resolution is achieved (reaches unimodular cone)
-I = matrix.identity(ZZ, 4)
-I.set_immutable()
-
-if I in resolution_tree.vertices():
-    print("Cone is resolved!")
-else:
-    print("Cone is not resolved")
+# Check for loops
+resolution_tree.loops()
     
-# Check for cycles (counterexamples)
+# If there are no loops, we look for a cycle, but first we must delete the loops
 resolution_tree.allow_loops(False)
-cycle = resolution_tree.longest_cycle()
-if len(cycle) > 0:
-    print(f"Found cycle of length {len(cycle.vertices())}")
+resolution_tree.longest_cycle()
 ```
 
 ### Non-normalized Nash Blowup (Semigroups)
@@ -216,7 +202,7 @@ B = matrix(ZZ, [
 ])
 
 tree = nash.cone_normalized_nash_tree(B)
-# This cone is a child of itself!
+tree.loops()
 ```
 
 ### Counterexample to Nash Blowup (Dimension 3)
@@ -230,7 +216,8 @@ S = matrix(ZZ, [
     [0, 0, 1, 2, 1, 1]
 ])
 
-tree = nash.semig_nash_tree(S)
+resolution_tree.allow_loops(False)
+resolution_tree.longest_cycle()
 # This semigroup is a grandchild of itself!
 ```
 
@@ -239,7 +226,7 @@ tree = nash.semig_nash_tree(S)
 ### Performance Considerations
 
 - **Bottleneck:** Computing Hilbert bases (done via Normaliz)
-- **Memory:** Store computed portions of digraphs to avoid recomputation
+- **Memory:** Store computed portions of digraphs to avoid recomputation. We can pass a dictionary (database DB) to the tree function so that it grows a previously computed database.
 - **Scalability:** Feasible up to dimension ~5 for systematic exploration
 
 ### PALP Normal Form
@@ -247,7 +234,6 @@ tree = nash.semig_nash_tree(S)
 Cones and semigroups are represented in PALP normal form to:
 - Handle unimodular equivalence efficiently
 - Provide canonical representatives
-- Use vertex-facet incidence graphs for ordering
 
 Note: For semigroups, uniqueness may fail due to automorphisms, but this doesn't significantly affect computational complexity since full-dimensional cones rarely have automorphisms.
 
@@ -289,8 +275,6 @@ If you use this code in your research, please cite:
 Contributions are welcome! Please feel free to submit pull requests or open issues for:
 - Performance improvements
 - Additional examples
-- Documentation enhancements
-- Bug reports
 
 ## License
 
